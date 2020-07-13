@@ -9,15 +9,24 @@
 
 %% escript Entry point
 main([ServerUrl, PlayerKey]) ->
-    {ok, _} = application:ensure_all_started(inets),
-    {ok, _} = application:ensure_all_started(ssl),
-    io:format("ServerUrl: ~p~n", [ServerUrl]),
-    io:format("PlayerKey: ~p~n", [PlayerKey]),
-    URL = ServerUrl,
-    {ok, {{_, 200, _}, _Headers, Body}} =
-        httpc:request(post, {ServerUrl, [], [], PlayerKey}, [], []),
-    io:format("~p~n", [Body]),
-    erlang:halt(0).
+    try
+        {ok, _} = application:ensure_all_started(inets),
+        {ok, _} = application:ensure_all_started(ssl),
+        io:format("ServerUrl: ~p; PlayerKey: ~p~n", [ServerUrl, PlayerKey]),
+        {ok, {{_, StatusCode, _}, _Headers, Body}} =
+            httpc:request(post, {ServerUrl, [], [], PlayerKey}, [], []),
+        if 
+            StatusCode == 200 -> 
+                io:format("Server response: ~p~n", [Body]),
+                erlang:halt(0);
+            true -> 
+                io:format("Unexpected server response:~nHTTP code: ~p~nResponse body: ~p~n", [StatusCode, Body]),
+                erlang:halt(2)
+        end
+    catch
+        error:Error -> io:format("Unexpected server response:~n~p", [Error]),
+        erlang:halt(1)
+    end. 
 
 %%====================================================================
 %% Internal functions

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-_build/default/bin/example $@
+_build/default/bin/example "$@" || echo "run error code: $?"
